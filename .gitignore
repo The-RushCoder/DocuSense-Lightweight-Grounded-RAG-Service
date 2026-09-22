@@ -1,0 +1,58 @@
+# ============================================================
+# DocuSense — .gitignore
+# ============================================================
+
+# Environment / secrets — NEVER commit .env
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.whl
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+
+# pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+coverage.xml
+
+# mypy / type checking
+.mypy_cache/
+.dmypy.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*.orig
+
+# OS
+.DS_Store
+Thumbs.db
+
+# FAISS index (generated artifact — not source)
+storage/faiss/*.faiss
+storage/faiss/*.pkl
+storage/faiss/index.faiss
+storage/faiss/index.pkl
+
+# Docker
+*.log
