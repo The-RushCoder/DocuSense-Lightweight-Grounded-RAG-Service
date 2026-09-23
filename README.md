@@ -35,7 +35,7 @@
 
 ## 1. Objective
 
-DocuSense ingests a fictional internal company policy document (`data/policy.md`), indexes it into a FAISS vector store using OpenAI embeddings, and exposes a REST API that answers natural-language questions with **strictly grounded answers** from Gemini 2.5 Flash.
+DocuSense ingests a fictional internal company policy document (`data/policy.md`), indexes it into a FAISS vector store using HuggingFace embeddings, and exposes a REST API that answers natural-language questions with **strictly grounded answers** from Gemini 2.5 Flash.
 
 The system has a hard guarantee: **if no documentation chunk exceeds the similarity threshold, Gemini is never called** and the exact fallback message is returned deterministically.
 
@@ -60,7 +60,7 @@ The system has a hard guarantee: **if no documentation chunk exceeds the similar
                  └────────┬────────┘
                           ↓
                  ┌─────────────────┐
-                 │  HuggingFace    │  all-MiniLM-L6-v2
+                 │  HuggingFace    │  paraphrase-mpnet-base-v2
                  │  Embeddings     │
                  └────────┬────────┘
                           ↓
@@ -78,13 +78,13 @@ User Question
       ↓
    FastAPI  POST /api/query
       ↓
-HuggingFace Embedding (all-MiniLM-L6-v2)
+HuggingFace Embedding (paraphrase-mpnet-base-v2)
       ↓
 FAISS Retrieval (Top-K = 4)
       ↓
 Cosine Similarity Normalisation → [0.0, 1.0]
       ↓
-Similarity Threshold (≥ 0.75)
+Similarity Threshold (≥ 0.85)
       ↓
  ┌─────────────────────────┐
  │  Chunks above threshold? │
@@ -111,7 +111,7 @@ Fallback       Grounded Prompt
 |-----------|-----------|-----|
 | Web framework | FastAPI + Uvicorn | Async, auto OpenAPI docs, type-safe |
 | LLM | Google Gemini 2.5 Flash | Cost-effective, fast, strong instruction following, no local GPU needed |
-| Embeddings | HuggingFace `all-MiniLM-L6-v2` | High quality, free, 384-dim, CPU inference |
+| Embeddings | HuggingFace `paraphrase-mpnet-base-v2` | High quality, free, 768-dim, CPU inference |
 | RAG framework | LangChain | Modular abstractions for loaders, splitters, vector stores |
 | Vector store | FAISS CPU (`IndexFlatIP`) | Exact search, no server, no GPU, persistent |
 | Configuration | Pydantic Settings + python-dotenv | Type-safe, validated, 12-factor |
@@ -126,11 +126,11 @@ Fallback       Grounded Prompt
 - **Fast** — Flash-class model returns responses quickly
 - **LangChain integration** — `langchain-google-genai` provides a clean, maintained integration
 
-### Why `all-MiniLM-L6-v2`?
+### Why `paraphrase-mpnet-base-v2`?
 
-- **Quality** — strong performance on MTEB benchmark
+- **Quality** — excellent performance on semantic similarity tasks
 - **Free & local** — no API cost, runs on CPU
-- **384 dimensions** — good retrieval granularity without memory pressure
+- **768 dimensions** — higher dimensional space for better semantic representation
 
 ### Why FAISS?
 
@@ -232,20 +232,18 @@ f:\DocuSense\
 - Git
 - Docker (optional, for containerised deployment)
 - A **Google API key** for Gemini ([get one here](https://aistudio.google.com/app/apikey))
-- An **OpenAI API key** for embeddings ([get one here](https://platform.openai.com/api-keys))
 
 ---
 
 ## 7. API Key Setup
 
-DocuSense uses **two separate API keys** for two separate responsibilities:
+DocuSense uses **one API key** for LLM generation:
 
 | Key | Service | Purpose |
 |-----|---------|---------|
 | `GOOGLE_API_KEY` | Google AI Studio | LLM generation (Gemini 2.5 Flash) |
-| `OPENAI_API_KEY` | OpenAI | Not currently used (embeddings use HuggingFace) |
 
-**HuggingFace is used for embeddings (local, no API key). Gemini is used for LLM inference.**
+**HuggingFace is used for embeddings (local, no API key required).**
 
 ```bash
 # Copy the example file
@@ -262,12 +260,11 @@ cp .env.example .env
 |----------|---------|-------------|
 | `GOOGLE_API_KEY` | *(required)* | Google Gemini API key |
 | `LLM_MODEL` | `gemini-2.5-flash` | Gemini model identifier |
-| `OPENAI_API_KEY` | *(optional)* | OpenAI API key (not currently used) |
-| `EMBEDDING_MODEL` | `all-MiniLM-L6-v2` | HuggingFace embedding model |
+| `EMBEDDING_MODEL` | `paraphrase-mpnet-base-v2` | HuggingFace embedding model |
 | `CHUNK_SIZE` | `800` | Characters per document chunk |
 | `CHUNK_OVERLAP` | `100` | Overlap characters between chunks |
 | `TOP_K` | `4` | Number of FAISS candidates retrieved |
-| `SIMILARITY_THRESHOLD` | `0.75` | Minimum cosine similarity to pass to LLM |
+| `SIMILARITY_THRESHOLD` | `0.85` | Minimum cosine similarity to pass to LLM |
 | `SOURCE_SNIPPET_LENGTH` | `300` | Max chars per source snippet in response |
 | `FAISS_INDEX_PATH` | `storage/faiss` | Directory where FAISS index is saved |
 | `DOCUMENT_PATH` | `data/policy.md` | Path to the source policy document |
@@ -310,11 +307,11 @@ Chunks created:     42
 Chunk size:         800 characters
 Chunk overlap:      100 characters
 
-Embedding model:    all-MiniLM-L6-v2
+Embedding model:    paraphrase-mpnet-base-v2
 Generating embeddings (this uses HuggingFace)...
-Embeddings generated: 42 vectors of dimension 384
+Embeddings generated: 42 vectors of dimension 768
 
-Vector store:       FAISS (IndexFlatIP, dimension=384)
+Vector store:       FAISS (IndexFlatIP, dimension=768)
 Vectors indexed:    42
 
 Index saved to:     storage/faiss
@@ -475,8 +472,8 @@ At approximately 4 characters per token, 800 characters ≈ 200 tokens per chunk
 
 ## 14. Embedding Strategy
 
-- **Model:** `all-MiniLM-L6-v2` (HuggingFace)
-- **Dimensions:** 384
+- **Model:** `paraphrase-mpnet-base-v2` (HuggingFace)
+- **Dimensions:** 768
 - **Integration:** `langchain-huggingface` (`HuggingFaceEmbeddings`)
 
 The **same embedding model** is used for both:
@@ -491,10 +488,10 @@ This is a hard requirement — mixing embedding models produces nonsensical simi
 
 ## 15. Retrieval Strategy
 
-1. The user's question is embedded using the same `all-MiniLM-L6-v2` model
+1. The user's question is embedded using the same `paraphrase-mpnet-base-v2` model
 2. FAISS `similarity_search_with_score` retrieves the Top-K (default: 4) candidate chunks
 3. Raw inner-product scores are converted to cosine similarity (see next section)
-4. Chunks below `SIMILARITY_THRESHOLD` (default: 0.75) are filtered out
+4. Chunks below `SIMILARITY_THRESHOLD` (default: 0.85) are filtered out
 5. Remaining chunks are sorted by score descending
 6. If zero chunks remain → deterministic fallback (Gemini is not called)
 7. If chunks remain → context is assembled and passed to Gemini
@@ -519,7 +516,7 @@ inner_product(u, v) = cosine_similarity(u, v)  ∈ [-1.0, 1.0]
 
 **Exposed score:** `similarity_score` in `[0.0, 1.0]`.
 
-> ⚠️ `similarity_score` is a **geometric cosine similarity measure** — not a probability, not a confidence percentage. A score of 0.9 means the query and chunk embeddings point in nearly the same direction in the 1536-dimensional embedding space.
+> ⚠️ `similarity_score` is a **geometric cosine similarity measure** — not a probability, not a confidence percentage. A score of 0.9 means the query and chunk embeddings point in nearly the same direction in the 768-dimensional embedding space.
 
 ---
 
@@ -711,7 +708,7 @@ The API is available at `http://localhost:8000`.
 |-----------|---------------|
 | Appropriate chunk sizing | 800 chars ≈ 200 tokens — documented rationale |
 | Chunk overlap | 100 chars (12.5%) — prevents boundary misses |
-| Similarity thresholding | `SIMILARITY_THRESHOLD=0.75` — configurable, applied before LLM call |
+| Similarity thresholding | `SIMILARITY_THRESHOLD=0.85` — configurable, applied before LLM call |
 | Prompt construction | Strict system instruction → context block → user question |
 | Top-K retrieval | `TOP_K=4` configurable, sorted by cosine similarity |
 | Same embedding for index + query | Enforced — single `get_embeddings()` factory |
