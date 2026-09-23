@@ -45,6 +45,8 @@ The system has a hard guarantee: **if no documentation chunk exceeds the similar
 
 ### Indexing pipeline (run once)
 
+![RAG Pipeline Infographic](RAG%20Pipeline%20Infographic%20Flowchart.png)
+
 ```
                  ┌─────────────────┐
                  │   policy.md     │
