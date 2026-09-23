@@ -60,7 +60,7 @@ The system has a hard guarantee: **if no documentation chunk exceeds the similar
                  └────────┬────────┘
                           ↓
                  ┌─────────────────┐
-                 │  OpenAI API     │  text-embedding-3-small
+                 │  HuggingFace    │  all-MiniLM-L6-v2
                  │  Embeddings     │
                  └────────┬────────┘
                           ↓
@@ -78,7 +78,7 @@ User Question
       ↓
    FastAPI  POST /api/query
       ↓
-OpenAI Embedding (text-embedding-3-small)
+HuggingFace Embedding (all-MiniLM-L6-v2)
       ↓
 FAISS Retrieval (Top-K = 4)
       ↓
@@ -111,7 +111,7 @@ Fallback       Grounded Prompt
 |-----------|-----------|-----|
 | Web framework | FastAPI + Uvicorn | Async, auto OpenAPI docs, type-safe |
 | LLM | Google Gemini 2.5 Flash | Cost-effective, fast, strong instruction following, no local GPU needed |
-| Embeddings | OpenAI `text-embedding-3-small` | High quality, low cost, 1536-dim, CPU inference |
+| Embeddings | HuggingFace `all-MiniLM-L6-v2` | High quality, free, 384-dim, CPU inference |
 | RAG framework | LangChain | Modular abstractions for loaders, splitters, vector stores |
 | Vector store | FAISS CPU (`IndexFlatIP`) | Exact search, no server, no GPU, persistent |
 | Configuration | Pydantic Settings + python-dotenv | Type-safe, validated, 12-factor |
@@ -126,12 +126,11 @@ Fallback       Grounded Prompt
 - **Fast** — Flash-class model returns responses quickly
 - **LangChain integration** — `langchain-google-genai` provides a clean, maintained integration
 
-### Why `text-embedding-3-small`?
+### Why `all-MiniLM-L6-v2`?
 
-- **Quality** — outperforms `ada-002` on MTEB while being cheaper
-- **No local model** — critical constraint (8 GB RAM, no GPU)
-- **1536 dimensions** — good retrieval granularity without memory pressure
-- **Cost** — very low per-token pricing for a small document corpus
+- **Quality** — strong performance on MTEB benchmark
+- **Free & local** — no API cost, runs on CPU
+- **384 dimensions** — good retrieval granularity without memory pressure
 
 ### Why FAISS?
 
@@ -185,7 +184,7 @@ f:\DocuSense\
 │   │
 │   ├── embeddings/
 │   │   ├── __init__.py
-│   │   └── embedder.py         ← OpenAIEmbeddings factory
+│   │   └── embedder.py         ← HuggingFaceEmbeddings factory
 │   │
 │   ├── retrieval/
 │   │   ├── __init__.py
@@ -244,9 +243,9 @@ DocuSense uses **two separate API keys** for two separate responsibilities:
 | Key | Service | Purpose |
 |-----|---------|---------|
 | `GOOGLE_API_KEY` | Google AI Studio | LLM generation (Gemini 2.5 Flash) |
-| `OPENAI_API_KEY` | OpenAI | Embeddings only (`text-embedding-3-small`) |
+| `OPENAI_API_KEY` | OpenAI | Not currently used (embeddings use HuggingFace) |
 
-**OpenAI is not used for LLM inference. Gemini is not used for embeddings.**
+**HuggingFace is used for embeddings (local, no API key). Gemini is used for LLM inference.**
 
 ```bash
 # Copy the example file
@@ -263,8 +262,8 @@ cp .env.example .env
 |----------|---------|-------------|
 | `GOOGLE_API_KEY` | *(required)* | Google Gemini API key |
 | `LLM_MODEL` | `gemini-2.5-flash` | Gemini model identifier |
-| `OPENAI_API_KEY` | *(required)* | OpenAI API key (embeddings only) |
-| `EMBEDDING_MODEL` | `text-embedding-3-small` | OpenAI embedding model |
+| `OPENAI_API_KEY` | *(optional)* | OpenAI API key (not currently used) |
+| `EMBEDDING_MODEL` | `all-MiniLM-L6-v2` | HuggingFace embedding model |
 | `CHUNK_SIZE` | `800` | Characters per document chunk |
 | `CHUNK_OVERLAP` | `100` | Overlap characters between chunks |
 | `TOP_K` | `4` | Number of FAISS candidates retrieved |
@@ -311,11 +310,11 @@ Chunks created:     42
 Chunk size:         800 characters
 Chunk overlap:      100 characters
 
-Embedding model:    text-embedding-3-small
-Generating embeddings (this calls the OpenAI API)...
-Embeddings generated: 42 vectors of dimension 1536
+Embedding model:    all-MiniLM-L6-v2
+Generating embeddings (this uses HuggingFace)...
+Embeddings generated: 42 vectors of dimension 384
 
-Vector store:       FAISS (IndexFlatIP, dimension=1536)
+Vector store:       FAISS (IndexFlatIP, dimension=384)
 Vectors indexed:    42
 
 Index saved to:     storage/faiss
@@ -325,7 +324,7 @@ Indexing completed successfully.
 
 The index is saved to `storage/faiss/` and reused by the API without rebuilding.
 
-> **Note:** Rebuilding the index requires an OpenAI API call. The API server does **not** rebuild the index on startup.
+> **Note:** Rebuilding the index uses the HuggingFace model locally (no API call). The API server does **not** rebuild the index on startup.
 
 ---
 
@@ -476,9 +475,9 @@ At approximately 4 characters per token, 800 characters ≈ 200 tokens per chunk
 
 ## 14. Embedding Strategy
 
-- **Model:** `text-embedding-3-small` (OpenAI)
-- **Dimensions:** 1536
-- **Integration:** `langchain-openai` (`OpenAIEmbeddings`)
+- **Model:** `all-MiniLM-L6-v2` (HuggingFace)
+- **Dimensions:** 384
+- **Integration:** `langchain-huggingface` (`HuggingFaceEmbeddings`)
 
 The **same embedding model** is used for both:
 1. Document indexing (via `python -m app.ingestion.indexer`)
@@ -486,13 +485,13 @@ The **same embedding model** is used for both:
 
 This is a hard requirement — mixing embedding models produces nonsensical similarity scores.
 
-**Requires:** `OPENAI_API_KEY` in `.env`. The OpenAI key is **only** used for embeddings, never for LLM inference.
+**Requires:** No API key for embeddings (HuggingFace model runs locally). OPENAI_API_KEY is not required for embeddings.
 
 ---
 
 ## 15. Retrieval Strategy
 
-1. The user's question is embedded using the same `text-embedding-3-small` model
+1. The user's question is embedded using the same `all-MiniLM-L6-v2` model
 2. FAISS `similarity_search_with_score` retrieves the Top-K (default: 4) candidate chunks
 3. Raw inner-product scores are converted to cosine similarity (see next section)
 4. Chunks below `SIMILARITY_THRESHOLD` (default: 0.75) are filtered out
@@ -736,7 +735,7 @@ The API is available at `http://localhost:8000`.
 | Type hints | All functions fully typed with `from __future__ import annotations` |
 | Error handling | Named exception classes: `DocumentLoadError`, `IndexNotFoundError`, `EmbeddingError`, `GenerationError` |
 | Clean naming | Consistent snake_case, no magic numbers, documented constants |
-| No deprecated imports | `langchain-google-genai`, `langchain-openai`, `langchain-text-splitters` |
+| No deprecated imports | `langchain-google-genai`, `langchain-huggingface`, `langchain-text-splitters` |
 | Focused modules | No module > ~150 lines; each has a single responsibility |
 
 ### Efficiency & Developer Experience — 20%

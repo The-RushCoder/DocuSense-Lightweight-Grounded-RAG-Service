@@ -156,6 +156,8 @@ class FAISSRetriever:
             if similarity_threshold is not None
             else settings.similarity_threshold
         )
+        
+        logger.info(f"Using threshold: {threshold}, top_k: {k}")
 
         # Retrieve raw (doc, score) pairs from LangChain FAISS.
         # The score returned by FAISS.similarity_search_with_score is the
@@ -175,6 +177,8 @@ class FAISSRetriever:
             # Clamp to [0.0, 1.0]: negative cosine similarity means the
             # chunk is semantically opposed — certainly not useful context.
             cosine_sim = float(np.clip(raw_score, 0.0, 1.0))
+            
+            logger.info(f"Chunk score: {cosine_sim:.4f}, threshold: {threshold:.4f}, passed: {cosine_sim >= threshold}")
 
             if cosine_sim >= threshold:
                 chunks.append(

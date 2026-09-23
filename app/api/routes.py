@@ -115,7 +115,7 @@ async def query_endpoint(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=(
                 "Failed to generate query embedding. "
-                "Check your OPENAI_API_KEY and try again."
+                "Check your embedding model configuration and try again."
             ),
         )
     except GenerationError as exc:

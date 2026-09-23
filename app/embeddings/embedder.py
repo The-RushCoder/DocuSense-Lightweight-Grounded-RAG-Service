@@ -1,8 +1,7 @@
 """
 Embedding model factory for DocuSense.
 
-Temporarily uses HuggingFaceEmbeddings ("all-MiniLM-L6-v2") instead of OpenAI
-to bypass the credit limit on the provided API key.
+Uses HuggingFaceEmbeddings ("paraphrase-mpnet-base-v2") for local, free embeddings.
 """
 
 from __future__ import annotations
@@ -21,7 +20,7 @@ def get_embeddings(
     """
     Build and return a configured HuggingFaceEmbeddings instance.
     """
-    chosen_model = model or "all-MiniLM-L6-v2"
+    chosen_model = model or "paraphrase-mpnet-base-v2"
     logger.info("Initialising embedding model: %s", chosen_model)
 
     return HuggingFaceEmbeddings(model_name=chosen_model)

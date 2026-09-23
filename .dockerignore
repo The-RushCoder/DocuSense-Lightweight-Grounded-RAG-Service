@@ -1,0 +1,27 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Python cache and local environments
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# Local source-control and editor metadata
+.git/
+.gitignore
+.vscode/
+
+# Tests and local artifacts are not needed in the runtime image
+tests/
+*.log
+
+# Runtime-generated vector-store files are mounted at runtime
+storage/

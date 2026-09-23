@@ -7,7 +7,7 @@ Usage:
 This command:
     1. Loads the policy document
     2. Chunks the document
-    3. Generates OpenAI embeddings
+    3. Generates HuggingFace embeddings
     4. Creates a FAISS index (IndexFlatIP on L2-normalised vectors)
     5. Saves the index to storage/faiss/
     6. Prints useful statistics
@@ -38,10 +38,10 @@ logger = logging.getLogger(__name__)
 
 def _validate_api_keys() -> None:
     """Fail fast with a clear message if required API keys are missing."""
-    if not settings.openai_api_key or settings.openai_api_key.startswith("your_"):
+    if not settings.google_api_key or settings.google_api_key.startswith("your_"):
         print(
-            "\n[ERROR] OPENAI_API_KEY is not set.\n"
-            "        Copy .env.example to .env and fill in your OpenAI API key.\n",
+            "\n[ERROR] GOOGLE_API_KEY is not set.\n"
+            "        Copy .env.example to .env and fill in your Google API key.\n",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -78,7 +78,7 @@ def build_index() -> None:
     # 3. Generate embeddings
     # ------------------------------------------------------------------ #
     print(f"\nEmbedding model:    {settings.embedding_model}")
-    print("Generating embeddings (this calls the OpenAI API)...")
+    print("Generating embeddings (this uses HuggingFace)...")
 
     embeddings_model = get_embeddings()
     texts = [chunk.page_content for chunk in chunks]
@@ -86,7 +86,7 @@ def build_index() -> None:
     try:
         vectors = embeddings_model.embed_documents(texts)
     except Exception as exc:
-        print(f"\n[ERROR] Embedding API call failed: {exc}\n", file=sys.stderr)
+        print(f"\n[ERROR] Embedding generation failed: {exc}\n", file=sys.stderr)
         sys.exit(1)
 
     print(f"Embeddings generated: {len(vectors)} vectors of dimension {len(vectors[0])}")

@@ -33,12 +33,12 @@ class Settings(BaseSettings):
     llm_model: str = Field(default="gemini-2.5-flash", description="Gemini model name")
 
     # ------------------------------------------------------------------ #
-    # OpenAI — Embeddings only
+    # HuggingFace — Embeddings only
     # ------------------------------------------------------------------ #
     openai_api_key: str = Field(default="", description="OpenAI API key for embeddings")
     embedding_model: str = Field(
-        default="text-embedding-3-small",
-        description="OpenAI embedding model name",
+        default="paraphrase-mpnet-base-v2",
+        description="HuggingFace embedding model name",
     )
 
     # ------------------------------------------------------------------ #
@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     )
     top_k: int = Field(default=4, description="Number of FAISS candidates to retrieve", ge=1)
     similarity_threshold: float = Field(
-        default=0.75,
+        default=0.70,
         description="Minimum cosine similarity score for a chunk to be used [0.0–1.0]",
         ge=0.0,
         le=1.0,

@@ -13,7 +13,8 @@ langchain-text-splitters>=0.3.0
 
 # --- LangChain Integrations ---
 langchain-google-genai>=2.0.0
-langchain-openai>=0.2.0
+langchain-huggingface>=0.1.2
+sentence-transformers>=3.0.0
 
 # --- Vector Store ---
 faiss-cpu>=1.9.0
@@ -30,7 +31,3 @@ httpx>=0.27.0
 
 # --- Utility ---
 numpy>=1.26.0
-
-# --- New local embedding support ---
-sentence-transformers>=3.0.0
-langchain-huggingface>=0.1.2

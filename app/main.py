@@ -95,7 +95,7 @@ def create_app() -> FastAPI:
             "- **Prompt injection protection**: Retrieved document text is treated as "
             "untrusted data — instructions inside documents are never executed\n\n"
             "### Embeddings\n"
-            "Query and document embeddings use `text-embedding-3-small` (OpenAI). "
+            "Query and document embeddings use `all-MiniLM-L6-v2` (HuggingFace). "
             "The same model is used for both indexing and retrieval.\n\n"
             "### Vector store\n"
             "FAISS `IndexFlatIP` with L2-normalised embeddings gives exact cosine "
