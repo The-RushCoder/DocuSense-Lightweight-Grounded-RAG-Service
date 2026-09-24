@@ -20,7 +20,10 @@ def get_embeddings(
     """
     Build and return a configured HuggingFaceEmbeddings instance.
     """
-    chosen_model = model or "paraphrase-mpnet-base-v2"
+    chosen_model = model or "BAAI/bge-small-en-v1.5"
     logger.info("Initialising embedding model: %s", chosen_model)
 
-    return HuggingFaceEmbeddings(model_name=chosen_model)
+    return HuggingFaceEmbeddings(
+        model_name=chosen_model,
+        encode_kwargs={'normalize_embeddings': True}
+    )

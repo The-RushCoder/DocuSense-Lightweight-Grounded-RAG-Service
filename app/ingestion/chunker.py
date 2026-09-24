@@ -6,15 +6,15 @@ chunk_size and chunk_overlap.  Each chunk receives deterministic metadata.
 
 Design rationale
 ----------------
-chunk_size = 800 characters
-    * At ~4 chars/token this corresponds to roughly 200 tokens per chunk.
+chunk_size = 400 characters
+    * At ~4 chars/token this corresponds to roughly 100 tokens per chunk.
     * Small enough to keep retrieval granular (a single policy clause
       rather than an entire section), but large enough to contain a
       coherent, self-contained policy statement.
     * Avoids context windows that are too narrow to answer questions
       about multi-sentence policies.
 
-chunk_overlap = 100 characters
+chunk_overlap = 50 characters
     * Prevents answers that span a chunk boundary from being missed.
     * Chosen as ~12.5% of chunk_size — a practical balance between
       retrieval coverage and index size.
@@ -73,7 +73,8 @@ def chunk_documents(
         length_function=len,
         # These separators try to break at section/paragraph/sentence
         # boundaries before resorting to character splitting.
-        separators=["\n\n", "\n", ". ", "! ", "? ", " ", ""],
+        separators=["\n## ", "\n\n", "\n* ", "\n", ". ", "! ", "? ", " ", ""],
+        
     )
 
     raw_chunks = splitter.split_documents(list(documents))

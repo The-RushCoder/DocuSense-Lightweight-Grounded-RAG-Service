@@ -16,6 +16,8 @@ services:
       - ./storage:/app/storage
       # Mount data directory so policy document can be updated without rebuild
       - ./data:/app/data
+      # Mount tests directory for running tests
+      - ./tests:/app/tests
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]

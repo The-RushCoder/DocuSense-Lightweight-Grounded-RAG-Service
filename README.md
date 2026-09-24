@@ -58,11 +58,11 @@ The system has a hard guarantee: **if no documentation chunk exceeds the similar
                           ↓
                  ┌─────────────────┐
                  │    Chunking     │  RecursiveCharacterTextSplitter
-                 │   800 / 100     │  chunk_size=800, overlap=100
+                 │    600 / 75     │  chunk_size=600, overlap=75
                  └────────┬────────┘
                           ↓
                  ┌─────────────────┐
-                 │  HuggingFace    │  paraphrase-mpnet-base-v2
+                 │  HuggingFace    │  BAAI/bge-small-en-v1.5
                  │  Embeddings     │
                  └────────┬────────┘
                           ↓
@@ -80,7 +80,7 @@ User Question
       ↓
    FastAPI  POST /api/query
       ↓
-HuggingFace Embedding (paraphrase-mpnet-base-v2)
+HuggingFace Embedding (BAAI/bge-small-en-v1.5)
       ↓
 FAISS Retrieval (Top-K = 4)
       ↓
@@ -113,7 +113,7 @@ Fallback       Grounded Prompt
 |-----------|-----------|-----|
 | Web framework | FastAPI + Uvicorn | Async, auto OpenAPI docs, type-safe |
 | LLM | Google Gemini 2.5 Flash | Cost-effective, fast, strong instruction following, no local GPU needed |
-| Embeddings | HuggingFace `paraphrase-mpnet-base-v2` | High quality, free, 768-dim, CPU inference |
+| Embeddings | HuggingFace `BAAI/bge-small-en-v1.5` | High quality, free, 384-dim, CPU inference |
 | RAG framework | LangChain | Modular abstractions for loaders, splitters, vector stores |
 | Vector store | FAISS CPU (`IndexFlatIP`) | Exact search, no server, no GPU, persistent |
 | Configuration | Pydantic Settings + python-dotenv | Type-safe, validated, 12-factor |
@@ -128,11 +128,11 @@ Fallback       Grounded Prompt
 - **Fast** — Flash-class model returns responses quickly
 - **LangChain integration** — `langchain-google-genai` provides a clean, maintained integration
 
-### Why `paraphrase-mpnet-base-v2`?
+### Why `BAAI/bge-small-en-v1.5`?
 
 - **Quality** — excellent performance on semantic similarity tasks
 - **Free & local** — no API cost, runs on CPU
-- **768 dimensions** — higher dimensional space for better semantic representation
+- **384 dimensions** — efficient semantic representation
 
 ### Why FAISS?
 
@@ -262,11 +262,11 @@ cp .env.example .env
 |----------|---------|-------------|
 | `GOOGLE_API_KEY` | *(required)* | Google Gemini API key |
 | `LLM_MODEL` | `gemini-2.5-flash` | Gemini model identifier |
-| `EMBEDDING_MODEL` | `paraphrase-mpnet-base-v2` | HuggingFace embedding model |
-| `CHUNK_SIZE` | `800` | Characters per document chunk |
-| `CHUNK_OVERLAP` | `100` | Overlap characters between chunks |
-| `TOP_K` | `4` | Number of FAISS candidates retrieved |
-| `SIMILARITY_THRESHOLD` | `0.85` | Minimum cosine similarity to pass to LLM |
+| `EMBEDDING_MODEL` | `BAAI/bge-small-en-v1.5` | HuggingFace embedding model |
+| `CHUNK_SIZE` | `600` | Characters per document chunk |
+| `CHUNK_OVERLAP` | `75` | Overlap characters between chunks |
+| `TOP_K` | `3` | Number of FAISS candidates retrieved |
+| `SIMILARITY_THRESHOLD` | `0.60` | Minimum cosine similarity to pass to LLM |
 | `SOURCE_SNIPPET_LENGTH` | `300` | Max chars per source snippet in response |
 | `FAISS_INDEX_PATH` | `storage/faiss` | Directory where FAISS index is saved |
 | `DOCUMENT_PATH` | `data/policy.md` | Path to the source policy document |
@@ -305,16 +305,16 @@ Expected output:
 Loading document...
 Document loaded successfully.
 
-Chunks created:     42
-Chunk size:         800 characters
-Chunk overlap:      100 characters
+Chunks created:     10–14
+Chunk size:         600 characters
+Chunk overlap:      75 characters
 
-Embedding model:    paraphrase-mpnet-base-v2
+Embedding model:    BAAI/bge-small-en-v1.5
 Generating embeddings (this uses HuggingFace)...
-Embeddings generated: 42 vectors of dimension 768
+Embeddings generated: 10–14 vectors of dimension 384
 
-Vector store:       FAISS (IndexFlatIP, dimension=768)
-Vectors indexed:    42
+Vector store:       FAISS (IndexFlatIP, dimension=384)
+Vectors indexed:    10–14
 
 Index saved to:     storage/faiss
 
@@ -448,19 +448,19 @@ curl -X POST http://localhost:8000/api/query \
 
 ## 13. Chunking Strategy
 
-**Configuration:** `CHUNK_SIZE=800`, `CHUNK_OVERLAP=100`
+**Configuration:** `CHUNK_SIZE=600`, `CHUNK_OVERLAP=75`
 
-### Why 800 characters?
+### Why 600 characters?
 
-At approximately 4 characters per token, 800 characters ≈ 200 tokens per chunk. This size:
+At approximately 4 characters per token, 600 characters ≈ 150 tokens per chunk. This size:
 
 - Is **large enough** to capture a complete policy clause or subsection in a single chunk (avoids retrieval returning fragments that are too short to answer a question)
 - Is **small enough** to keep retrieval granular — a single policy statement rather than a full section
-- Keeps the context window manageable when passing 4 chunks to Gemini (≈ 800 tokens of context)
+- Keeps the context window manageable when passing 3 chunks to Gemini (≈ 450 tokens of context)
 
-### Why 100 characters overlap?
+### Why 75 characters overlap?
 
-100 characters is approximately 12.5% of chunk_size. This:
+75 characters is approximately 12.5% of chunk_size. This:
 
 - **Prevents boundary misses** — a question whose answer spans a chunk boundary still retrieves at least one relevant chunk
 - Is **modest enough** to avoid significant index size inflation
@@ -474,8 +474,8 @@ At approximately 4 characters per token, 800 characters ≈ 200 tokens per chunk
 
 ## 14. Embedding Strategy
 
-- **Model:** `paraphrase-mpnet-base-v2` (HuggingFace)
-- **Dimensions:** 768
+- **Model:** `BAAI/bge-small-en-v1.5` (HuggingFace)
+- **Dimensions:** 384
 - **Integration:** `langchain-huggingface` (`HuggingFaceEmbeddings`)
 
 The **same embedding model** is used for both:
@@ -490,10 +490,10 @@ This is a hard requirement — mixing embedding models produces nonsensical simi
 
 ## 15. Retrieval Strategy
 
-1. The user's question is embedded using the same `paraphrase-mpnet-base-v2` model
-2. FAISS `similarity_search_with_score` retrieves the Top-K (default: 4) candidate chunks
+1. The user's question is embedded using the same `BAAI/bge-small-en-v1.5` model
+2. FAISS `similarity_search_with_score` retrieves the Top-K (default: 3) candidate chunks
 3. Raw inner-product scores are converted to cosine similarity (see next section)
-4. Chunks below `SIMILARITY_THRESHOLD` (default: 0.85) are filtered out
+4. Chunks below `SIMILARITY_THRESHOLD` (default: 0.60) are filtered out
 5. Remaining chunks are sorted by score descending
 6. If zero chunks remain → deterministic fallback (Gemini is not called)
 7. If chunks remain → context is assembled and passed to Gemini
@@ -708,11 +708,11 @@ The API is available at `http://localhost:8000`.
 
 | Criterion | Implementation |
 |-----------|---------------|
-| Appropriate chunk sizing | 800 chars ≈ 200 tokens — documented rationale |
-| Chunk overlap | 100 chars (12.5%) — prevents boundary misses |
-| Similarity thresholding | `SIMILARITY_THRESHOLD=0.85` — configurable, applied before LLM call |
+| Appropriate chunk sizing | 600 chars ≈ 150 tokens — documented rationale |
+| Chunk overlap | 75 chars (12.5%) — prevents boundary misses |
+| Similarity thresholding | `SIMILARITY_THRESHOLD=0.60` — configurable, applied before LLM call |
 | Prompt construction | Strict system instruction → context block → user question |
-| Top-K retrieval | `TOP_K=4` configurable, sorted by cosine similarity |
+| Top-K retrieval | `TOP_K=3` configurable, sorted by cosine similarity |
 | Same embedding for index + query | Enforced — single `get_embeddings()` factory |
 
 ### Guardrails & Reliability — 25%

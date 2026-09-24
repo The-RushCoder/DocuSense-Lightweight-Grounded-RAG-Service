@@ -36,20 +36,20 @@ class Settings(BaseSettings):
     # HuggingFace — Embeddings only
     # ------------------------------------------------------------------ #
     embedding_model: str = Field(
-        default="paraphrase-mpnet-base-v2",
+        default="BAAI/bge-small-en-v1.5",
         description="HuggingFace embedding model name",
     )
 
     # ------------------------------------------------------------------ #
     # RAG parameters
     # ------------------------------------------------------------------ #
-    chunk_size: int = Field(default=800, description="Characters per text chunk", ge=100)
+    chunk_size: int = Field(default=600, description="Characters per text chunk", ge=100)
     chunk_overlap: int = Field(
-        default=100, description="Overlap characters between consecutive chunks", ge=0
+        default=75, description="Overlap characters between consecutive chunks", ge=0
     )
-    top_k: int = Field(default=4, description="Number of FAISS candidates to retrieve", ge=1)
+    top_k: int = Field(default=3, description="Number of FAISS candidates to retrieve", ge=1)
     similarity_threshold: float = Field(
-        default=0.85,
+        default=0.60,
         description="Minimum cosine similarity score for a chunk to be used [0.0–1.0]",
         ge=0.0,
         le=1.0,
@@ -84,7 +84,7 @@ class Settings(BaseSettings):
     def overlap_must_be_less_than_size(cls, v: int, info: object) -> int:
         # Access chunk_size from the model data if available
         data = getattr(info, "data", {})
-        chunk_size = data.get("chunk_size", 800)
+        chunk_size = data.get("chunk_size", 400)
         if v >= chunk_size:
             raise ValueError(
                 f"chunk_overlap ({v}) must be less than chunk_size ({chunk_size})"
