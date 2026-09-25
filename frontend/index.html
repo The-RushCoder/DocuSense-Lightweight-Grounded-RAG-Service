@@ -23,59 +23,71 @@
         </div>
       </header>
 
-      <main>
-        <section class="intro">
-          <p class="eyebrow">Internal knowledge assistant</p>
-          <h1>Ask the policy.<br /><em>Get the source.</em></h1>
-          <p class="lede">DocuSense finds the relevant policy passages and keeps every answer grounded in your documentation.</p>
-        </section>
+      <main class="two-col">
+        <!-- LEFT PANEL -->
+        <aside class="left-panel">
+          <section class="intro">
+            <p class="eyebrow">Internal knowledge assistant</p>
+            <h1>Ask the policy.<br /><em>Get the source.</em></h1>
+            <p class="lede">DocuSense finds the relevant policy passages and keeps every answer grounded in your documentation.</p>
+          </section>
 
-        <section class="query-panel" aria-labelledby="query-heading">
-          <div class="panel-heading">
-            <div>
-              <p class="panel-kicker">Search the knowledge base</p>
-              <h2 id="query-heading">What do you need to know?</h2>
+          <section class="query-panel" aria-labelledby="query-heading">
+            <div class="panel-heading">
+              <div>
+                <p class="panel-kicker">Search the knowledge base</p>
+                <h2 id="query-heading">What do you need to know?</h2>
+              </div>
+              <span class="shortcut">⌘ ↵</span>
             </div>
-            <span class="shortcut">⌘ ↵</span>
-          </div>
-          <form id="query-form">
-            <label class="sr-only" for="question">Your question</label>
-            <textarea id="question" name="question" rows="4" maxlength="2000" placeholder="Ask a question about your policies..." required></textarea>
-            <div class="form-footer">
-              <span class="character-count" id="character-count">0 / 2000</span>
-              <button class="submit-button" type="submit">
-                <span id="submit-label">Ask DocuSense</span>
-                <span class="arrow" aria-hidden="true">↗</span>
-              </button>
+            <form id="query-form">
+              <label class="sr-only" for="question">Your question</label>
+              <textarea id="question" name="question" rows="4" maxlength="2000" placeholder="Ask a question about your policies..." required></textarea>
+              <div class="form-footer">
+                <span class="character-count" id="character-count">0 / 2000</span>
+                <button class="submit-button" type="submit">
+                  <span id="submit-label">Ask DocuSense</span>
+                  <span class="arrow" aria-hidden="true">↗</span>
+                </button>
+              </div>
+            </form>
+            <div class="suggestions" aria-label="Suggested questions">
+              <div class="suggestion-group">
+                <span class="suggestion-label">In Scope</span>
+                <button type="button" data-question="How often should production databases be backed up?">How often should production databases be backed up?</button>
+                <button type="button" data-question="What is the database backup retention period?">What is the database backup retention period?</button>
+              </div>
+              <div class="suggestion-group">
+                <span class="suggestion-label">Out Scope</span>
+                <button type="button" data-question="Who can access production systems?">Who can access production systems?</button>
+                <button type="button" data-question="What is the company's vacation policy?">What is the company's vacation policy?</button>
+              </div>
             </div>
-          </form>
-          <div class="suggestions" aria-label="Suggested questions">
-            <div class="suggestion-group">
-              <span class="suggestion-label">In Scope</span>
-              <button type="button" data-question="How often should production databases be backed up?">How often should production databases be backed up?</button>
-              <button type="button" data-question="What is the database backup retention period?">What is the database backup retention period?</button>
-            </div>
-            <div class="suggestion-group">
-              <span class="suggestion-label">Out Scope</span>
-              <button type="button" data-question="Who can access production systems?">Who can access production systems?</button>
-              <button type="button" data-question="What is the company's vacation policy?">What is the company's vacation policy?</button>
-            </div>
-          </div>
-        </section>
+          </section>
+        </aside>
 
-        <section class="result-area" id="result-area" aria-live="polite" hidden>
-          <div class="result-header">
-            <p class="panel-kicker">Response</p>
-            <span class="result-meta" id="result-meta"></span>
+        <!-- RIGHT PANEL -->
+        <section class="right-panel">
+          <div class="result-placeholder" id="result-placeholder">
+            <div class="placeholder-icon" aria-hidden="true">✦</div>
+            <p class="placeholder-title">Your answer will appear here</p>
+            <p class="placeholder-sub">Ask a question on the left to get a grounded response from your policy documentation.</p>
           </div>
-          <article class="answer-card">
-            <div class="answer-icon" aria-hidden="true">✦</div>
-            <div>
-              <p class="answer-label">Grounded answer</p>
-              <p class="answer" id="answer"></p>
+
+          <div class="result-area" id="result-area" aria-live="polite" hidden>
+            <div class="result-header">
+              <p class="panel-kicker">Response</p>
+              <span class="result-meta" id="result-meta"></span>
             </div>
-          </article>
-          <div class="sources" id="sources"></div>
+            <article class="answer-card">
+              <div class="answer-icon" aria-hidden="true">✦</div>
+              <div>
+                <p class="answer-label">Grounded answer</p>
+                <p class="answer" id="answer"></p>
+              </div>
+            </article>
+            <div class="sources" id="sources"></div>
+          </div>
         </section>
       </main>
 

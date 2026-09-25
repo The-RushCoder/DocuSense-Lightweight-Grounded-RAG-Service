@@ -1,8 +1,12 @@
-const API_BASE = `${window.location.protocol}//${window.location.hostname || "127.0.0.1"}:8000`;
+// In Docker, nginx proxies /api/* → backend. In local dev we point directly at :8000.
+const API_BASE = window.location.port === "3000" || window.location.port === ""
+  ? ""  // served via nginx proxy — use same-origin paths
+  : `${window.location.protocol}//${window.location.hostname || "127.0.0.1"}:8000`;
 const form = document.querySelector("#query-form");
 const question = document.querySelector("#question");
 const count = document.querySelector("#character-count");
 const resultArea = document.querySelector("#result-area");
+const resultPlaceholder = document.querySelector("#result-placeholder");
 const answer = document.querySelector("#answer");
 const sources = document.querySelector("#sources");
 const resultMeta = document.querySelector("#result-meta");
@@ -59,6 +63,7 @@ async function askQuestion(event) {
 
   submitButton.disabled = true;
   submitLabel.textContent = "Searching...";
+  resultPlaceholder.hidden = true;
   resultArea.hidden = false;
   answer.textContent = "Looking through the policy documentation...";
   sources.replaceChildren();

@@ -1,7 +1,7 @@
 """
 Embedding model factory for DocuSense.
 
-Uses HuggingFaceEmbeddings ("paraphrase-mpnet-base-v2") for local, free embeddings.
+Uses HuggingFaceEmbeddings ("BAAI/bge-small-en-v1.5") for local, free embeddings.
 """
 
 from __future__ import annotations

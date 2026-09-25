@@ -1,31 +1,38 @@
 version: "3.9"
 
 services:
+
+  # ── Backend API ──────────────────────────────────────────────
   docusense:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: docusense-api
     ports:
+      # Expose for local dev / debugging. In production remove this
+      # and let the frontend nginx proxy be the only entry point.
       - "${APP_PORT:-8000}:8000"
     env_file:
       - .env
     volumes:
       # Persist the FAISS index across container restarts.
-      # Build the index first: docker compose run docusense python -m app.ingestion.indexer
+      # Build the index first:
+      #   docker compose run docusense python -m app.ingestion.indexer
       - ./storage:/app/storage
-      # Mount data directory so policy document can be updated without rebuild
+      # Mount data dir so policy docs can be updated without rebuild
       - ./data:/app/data
-      # Mount tests directory for running tests
+      # Mount tests dir for running tests inside the container
       - ./tests:/app/tests
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
+      start_period: 15s
 
+  # ── Frontend (nginx) ─────────────────────────────────────────
   frontend:
     build:
       context: ./frontend
@@ -34,5 +41,12 @@ services:
     ports:
       - "${FRONTEND_PORT:-3000}:80"
     depends_on:
-      - docusense
+      docusense:
+        condition: service_healthy   # wait for backend to pass health check
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
