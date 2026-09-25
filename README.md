@@ -39,18 +39,74 @@ matches from reaching the LLM.
 ## Project structure
 
 ```text
-app/
-  api/routes.py                 FastAPI endpoints
-  core/config.py                Environment-backed settings
-  ingestion/                    Load, chunk, and index policy text
-  embeddings/embedder.py       Local HuggingFace embeddings
-  retrieval/retriever.py       FAISS search and threshold filtering
-  generation/                   Gemini client and grounded prompt
-  services/rag_service.py      RAG orchestration and fallback guardrail
-  schemas/query.py              Request and response models
-data/policy.md                  Source documentation
-storage/faiss/                  Generated FAISS index
-tests/                           Unit and API tests
+f:\DocuSense\
+|
+├── app/
+│   ├── __init__.py
+│   ├── main.py                 FastAPI app factory + lifespan
+│   │
+│   ├── api/
+│   │   ├── __init__.py
+│   │   └── routes.py           GET /health, POST /api/query
+│   │
+│   ├── core/
+│   │   ├── __init__.py
+│   │   └── config.py           Pydantic Settings (all env vars)
+│   │
+│   ├── schemas/
+│   │   ├── __init__.py
+│   │   └── query.py            QueryRequest, QueryResponse, SourceChunk
+│   │
+│   ├── ingestion/
+│   │   ├── __init__.py
+│   │   ├── loader.py           Document loading
+│   │   ├── chunker.py          RecursiveCharacterTextSplitter
+│   │   └── indexer.py          CLI: python -m app.ingestion.indexer
+│   │
+│   ├── embeddings/
+│   │   ├── __init__.py
+│   │   └── embedder.py         HuggingFace embeddings factory
+│   │
+│   ├── retrieval/
+│   │   ├── __init__.py
+│   │   └── retriever.py        FAISSRetriever + cosine similarity
+│   │
+│   ├── generation/
+│   │   ├── __init__.py
+│   │   ├── prompt.py           Centralised prompt template
+│   │   └── generator.py        Gemini 2.5 Flash integration
+│   │
+│   └── services/
+│       ├── __init__.py
+│       └── rag_service.py      Full pipeline orchestration
+│
+├── data/
+│   └── policy.md               TechNova Corp fictional policy doc
+│
+├── storage/
+│   └── faiss/                  Generated FAISS index (gitignored)
+│       └── index.faiss
+│
+├── frontend/
+│   ├── index.html              Lightweight browser UI
+│   ├── styles.css              Frontend styles
+│   ├── app.js                  API-connected query interface
+│   └── Dockerfile              Nginx frontend image
+│
+├── tests/
+│   ├── __init__.py
+│   ├── test_chunking.py        Chunking, IDs, metadata
+│   ├── test_retrieval.py       Retrieval, threshold, scores
+│   ├── test_guardrails.py      Fallback, injection, guardrails
+│   └── test_api.py             Validation, schema, missing index
+│
+├── .env.example                Copy to .env and fill in API keys
+├── .gitignore
+├── requirements.txt
+├── pytest.ini
+├── Dockerfile
+├── docker-compose.yml
+└── README.md
 ```
 
 ## Requirements
@@ -97,7 +153,9 @@ docker compose up --build
 ```
 
 The index is persisted in `storage/faiss` and the policy is mounted from
-`data/`.
+`data/`. The browser UI is available at <http://localhost:3000>; the API and
+interactive docs remain available at <http://localhost:8000> and
+<http://localhost:8000/docs>.
 
 ## API usage
 
@@ -154,33 +212,14 @@ This design prioritizes predictable answers over an ungrounded chat interface.
 Run the complete test suite:
 
 ```powershell
-pytest
+python -m pytest tests/ -v
+```
+
+```docker
+docker compose run --rm docusense pytest tests/ -v
 ```
 
 Tests cover chunking, metadata, FAISS retrieval and sorting, score clamping,
 threshold filtering, out-of-scope fallback behavior, prompt-injection
 resistance, API validation, and missing-index errors. Tests mock external LLM
 calls, so a Gemini key is not required to run them.
-
-## Evaluation matrix
-
-| Area | Evidence | Weight |
-|---|---|---:|
-| RAG architecture | Chunking, embeddings, FAISS retrieval, threshold, grounded prompt | 30% |
-| Guardrails and reliability | Deterministic fallback, validation, source attribution, tests | 25% |
-| Code quality and structure | Separate ingestion, indexing, retrieval, generation, and API layers | 25% |
-| Efficiency and developer experience | Short README, `.env.example`, token awareness, Docker Compose | 20% |
-
-## Submission checklist
-
-- Push the repository to GitHub or GitLab.
-- Include `.env.example`, never a real `.env` or API key.
-- Include the test suite and the two evaluation queries above.
-- Explain the chunking and embedding choices in the repository README.
-- Verify both local PowerShell and Docker startup paths.
-
-## Security note
-
-Never commit a real Google API key. The working `.env` shown during setup
-contains a key-shaped value; rotate that key in Google AI Studio immediately,
-replace it with a new key locally, and keep `.env` ignored by Git.
