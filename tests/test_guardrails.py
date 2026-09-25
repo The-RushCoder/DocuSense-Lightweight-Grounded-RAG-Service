@@ -5,7 +5,7 @@ Verifies:
   3. Out-of-scope question → exact fallback message
   4. Prompt injection → no fabricated information
   8. Similarity threshold — results below threshold excluded
-  9. Deterministic fallback — zero relevant results never call Gemini
+  9. Deterministic fallback — zero relevant results never call Groq
 
 All tests use mocks. No real API calls are made.
 """
@@ -43,7 +43,7 @@ def _make_chunk(chunk_id: str, text: str, score: float = 0.90) -> RetrievedChunk
 
 
 def _make_mock_llm(answer: str = "Mocked grounded answer.", tokens: int = 42) -> MagicMock:
-    """Return a mock Gemini LLM that returns a controlled answer."""
+    """Return a mock Groq LLM that returns a controlled answer."""
     mock_llm = MagicMock()
     response_mock = MagicMock()
     response_mock.content = answer
@@ -89,7 +89,7 @@ class TestOutOfScopeQuestion:
 
     def test_out_of_scope_does_not_call_llm(self) -> None:
         """
-        Test 9 (overlapping): Gemini must NOT be called when no relevant
+        Test 9 (overlapping): Groq must NOT be called when no relevant
         chunks are available.  This is the deterministic guardrail.
         """
         retriever = _make_retriever(chunks=[])
@@ -232,7 +232,7 @@ class TestDeterministicFallback:
                 assert response.answer == FALLBACK_MESSAGE
 
             assert mock_generate.call_count == 0, (
-                f"Gemini must never be called when context is empty. "
+                f"Groq must never be called when context is empty. "
                 f"Called {mock_generate.call_count} times."
             )
 

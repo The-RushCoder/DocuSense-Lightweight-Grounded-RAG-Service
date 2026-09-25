@@ -23,7 +23,7 @@ class QueryRequest(BaseModel):
         min_length=1,
         max_length=2000,
         description="The question to answer using the policy documentation.",
-        examples=["What is the database backup retention period?"],
+        examples=["How often should production databases be backed up?"],
     )
 
     @field_validator("question")
@@ -36,7 +36,7 @@ class QueryRequest(BaseModel):
     model_config = {
         "json_schema_extra": {
             "examples": [
-                {"question": "What is the database backup retention period?"}
+                {"question": "How often should production databases be backed up?"}
             ]
         }
     }

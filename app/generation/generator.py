@@ -69,6 +69,27 @@ def _extract_tokens(ai_message: object) -> Optional[int]:
     return None  # Token metadata not available — return null, not a guess
 
 
+def _content_to_text(content: object) -> str:
+    """Normalize Gemini text content across LangChain response formats."""
+    if isinstance(content, str):
+        return content
+
+    if isinstance(content, list):
+        text_parts: list[str] = []
+        for block in content:
+            if isinstance(block, str):
+                text_parts.append(block)
+            elif isinstance(block, dict) and isinstance(block.get("text"), str):
+                text_parts.append(block["text"])
+            else:
+                block_text = getattr(block, "text", None)
+                if isinstance(block_text, str):
+                    text_parts.append(block_text)
+        return "".join(text_parts)
+
+    return ""
+
+
 def generate_answer(
     context: str,
     question: str,
@@ -117,7 +138,7 @@ def generate_answer(
         ) from exc
 
     # Validate the response content
-    answer_text: str = getattr(response, "content", "") or ""
+    answer_text = _content_to_text(getattr(response, "content", ""))
     answer_text = answer_text.strip()
 
     if not answer_text:

@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     )
     top_k: int = Field(default=3, description="Number of FAISS candidates to retrieve", ge=1)
     similarity_threshold: float = Field(
-        default=0.60,
+        default=0.70,
         description="Minimum cosine similarity score for a chunk to be used [0.0–1.0]",
         ge=0.0,
         le=1.0,
