@@ -7,6 +7,11 @@ with FAISS and asks Gemini 2.5 Flash to answer only from those passages.
 If no retrieved passage reaches the configured similarity threshold, the
 service returns a deterministic fallback and does not call Gemini.
 
+## RAG Pipeline Flowchart
+
+![RAG Pipeline Infographic Flowchart](RAG%20Pipeline%20Infographic%20Flowchart.png)
+
+
 ## Stack and design choices
 
 - **FastAPI + Uvicorn**: typed REST API with automatic OpenAPI documentation.
@@ -35,6 +40,7 @@ that does not change the application configuration.
 `600/75` keeps enough local context while limiting prompt size. `TOP_K=3`
 provides a small, focused context window, and the threshold prevents weak
 matches from reaching the LLM.
+
 
 ## Project structure
 
