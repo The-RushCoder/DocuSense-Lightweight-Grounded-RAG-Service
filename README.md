@@ -122,7 +122,24 @@ f:\DocuSense\
 - A Google Gemini API key: <https://aistudio.google.com/app/apikey>
 - Docker Desktop, optional
 
-## Installation: PowerShell
+## Installation - Run Project if using: Docker
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Set `GOOGLE_API_KEY` in `.env`, then run:
+
+```powershell
+docker compose run --rm docusense python -m app.ingestion.indexer
+docker compose up --build
+```
+
+The browser UI is available at <http://localhost:3000>; 
+The API test (Postman) at http://localhost:8000/api/query>.
+
+
+## Installation - Run Project if using: PowerShell
 
 ```powershell
 pip install -r requirements.txt
@@ -142,26 +159,9 @@ python -m app.ingestion.indexer
 uvicorn app.main:app --reload
 ```
 
-The API is available at <http://localhost:8000> and interactive docs are at
-<http://localhost:8000/docs>.
+The browser UI is available at <http://localhost:3000>; 
+The API test (Postman) at http://localhost:8000/api/query>.
 
-## Installation: Docker
-
-```powershell
-Copy-Item .env.example .env
-```
-
-Set `GOOGLE_API_KEY` in `.env`, then run:
-
-```powershell
-docker compose run --rm docusense python -m app.ingestion.indexer
-docker compose up --build
-```
-
-The index is persisted in `storage/faiss` and the policy is mounted from
-`data/`. The browser UI is available at <http://localhost:3000>; the API and
-interactive docs remain available at <http://localhost:8000> and
-<http://localhost:8000/docs>.
 
 ## API usage
 
